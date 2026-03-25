@@ -5,9 +5,11 @@ PricePrompter Cloud - 语义缓存管理器
 import json
 import hashlib
 import sqlite3
+import os
+import math
+from pathlib import Path
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
-import numpy as np
 
 from .logger import get_logger
 
@@ -31,6 +33,9 @@ class SemanticCacheManager:
     """语义缓存管理器 - 使用SQLite存储和余弦相似度计算"""
     
     def __init__(self, db_path: str = "./cache.db"):
+        # Force in-memory for serverless
+        if os.getenv("PRICEPROMPTER_SERVERLESS") == "1":
+            db_path = ":memory:"
         self.db_path = db_path
         # 对于内存模式，保持连接打开以维持数据
         self._is_memory = db_path == ":memory:"
@@ -39,6 +44,10 @@ class SemanticCacheManager:
             self._init_memory_db()
         else:
             self._conn = None
+            # Ensure directory exists for file DB
+            if db_path != ":memory:":
+                db_file = Path(db_path)
+                db_file.parent.mkdir(parents=True, exist_ok=True)
             self._init_db()
         logger.info(f"语义缓存管理器初始化完成: {db_path}")
     
@@ -91,7 +100,7 @@ class SemanticCacheManager:
         vector = [words.count(word) for word in vocab]
         
         # 归一化
-        norm = np.linalg.norm(vector)
+        norm = math.sqrt(sum(x * x for x in vector))
         if norm > 0:
             vector = [v / norm for v in vector]
         
@@ -105,8 +114,8 @@ class SemanticCacheManager:
         vec2 = vec2 + [0] * (max_len - len(vec2))
         
         dot_product = sum(a * b for a, b in zip(vec1, vec2))
-        norm1 = np.linalg.norm(vec1)
-        norm2 = np.linalg.norm(vec2)
+        norm1 = math.sqrt(sum(x * x for x in vec1))
+        norm2 = math.sqrt(sum(x * x for x in vec2))
         
         if norm1 == 0 or norm2 == 0:
             return 0.0
@@ -286,3 +295,4 @@ class SemanticCacheManager:
         except Exception as e:
             logger.error(f"获取缓存统计失败: {str(e)}")
             return {'total_entries': 0, 'tokens_saved': 0, 'today_added': 0}
+day_added': 0}

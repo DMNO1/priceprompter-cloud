@@ -18,20 +18,7 @@ class PricePrompterLogger:
         # 清除已有处理器
         self.logger.handlers = []
         
-        # 确保日志目录存在
-        os.makedirs(os.path.dirname(log_file), exist_ok=True)
-        
-        # 文件处理器
-        file_handler = logging.FileHandler(log_file, encoding='utf-8')
-        file_handler.setLevel(getattr(logging, level.upper()))
-        file_formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
-        file_handler.setFormatter(file_formatter)
-        self.logger.addHandler(file_handler)
-        
-        # 控制台处理器
+        # 控制台处理器 (总是有)
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(getattr(logging, level.upper()))
         console_formatter = logging.Formatter('%(levelname)s: %(message)s')
@@ -40,6 +27,22 @@ class PricePrompterLogger:
         import io
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
         self.logger.addHandler(console_handler)
+        
+        # 文件处理器 (仅非serverless环境)
+        if os.getenv("PRICEPROMPTER_SERVERLESS") != "1":
+            try:
+                # 确保日志目录存在
+                os.makedirs(os.path.dirname(log_file), exist_ok=True)
+                file_handler = logging.FileHandler(log_file, encoding='utf-8')
+                file_handler.setLevel(getattr(logging, level.upper()))
+                file_formatter = logging.Formatter(
+                    '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S'
+                )
+                file_handler.setFormatter(file_formatter)
+                self.logger.addHandler(file_handler)
+            except Exception as e:
+                self.logger.warning(f"无法创建文件日志处理器: {e}")
     
     def info(self, message: str):
         """记录信息日志"""

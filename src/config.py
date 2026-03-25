@@ -45,11 +45,16 @@ class AppConfig:
 
 def load_config() -> AppConfig:
     """加载配置"""
+    # Detect serverless environment
+    is_serverless = os.getenv("PRICEPROMPTER_SERVERLESS") == "1" or os.getenv("VERCEL") == "1"
+    db_url = os.getenv("DATABASE_URL", "sqlite:///./priceprompter.db")
+    if is_serverless:
+        db_url = "sqlite:///:memory:"
     return AppConfig(
         host=os.getenv("HOST", "0.0.0.0"),
         port=int(os.getenv("PORT", "3000")),
         debug=os.getenv("DEBUG", "false").lower() == "true",
-        database_url=os.getenv("DATABASE_URL", "sqlite:///./priceprompter.db"),
+        database_url=db_url,
         chroma_url=os.getenv("CHROMA_URL", "http://localhost:8000"),
         redis_url=os.getenv("REDIS_URL", "redis://localhost:6379"),
         openai_api_key=os.getenv("OPENAI_API_KEY", ""),
