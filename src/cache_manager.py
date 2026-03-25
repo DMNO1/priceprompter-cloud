@@ -295,4 +295,3 @@ class SemanticCacheManager:
         except Exception as e:
             logger.error(f"获取缓存统计失败: {str(e)}")
             return {'total_entries': 0, 'tokens_saved': 0, 'today_added': 0}
-day_added': 0}
