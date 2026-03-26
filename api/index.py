@@ -6,8 +6,8 @@ PricePrompter Cloud - Vercel WSGI adapter
 import sys
 import os
 
-# 确保src在路径中
-sys.path.insert(0, os.path.dirname(__file__))
+# 确保项目根目录在路径中
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 # Set serverless mode for components before import
 if os.getenv("VERCEL") or os.getenv("VERCEL_ENV"):
