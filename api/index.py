@@ -10,13 +10,15 @@ import logging
 logger = logging.getLogger("priceprompter.vercel")
 
 # Ensure project root is in path
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
 
 # Set serverless mode for components before import
 if os.getenv("VERCEL") or os.getenv("VERCEL_ENV"):
     os.environ["PRICEPROMPTER_SERVERLESS"] = "1"
 
 try:
+    # Use absolute imports by importing the package directly
     from src.api_server import app as application, init_app
 
     # Initialize (may return False if DB unavailable, but app still works)
